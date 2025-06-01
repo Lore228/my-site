@@ -64,7 +64,7 @@ export default function BookingDialog() {
   useEffect(() => {
     if (bookingData.date) {
       const dateStr = bookingData.date.format('YYYY-MM-DD');
-      fetch(`http://localhost:4000/api/appointments?date=${dateStr}`)
+      fetch(`/api/appointments?date=${dateStr}`)
         .then((res) => res.json())
         .then((data) => setBookedHours(data))
         .catch(() => setBookedHours([]));
@@ -140,8 +140,8 @@ export default function BookingDialog() {
 
     setLoading(true);
     try {
-      const response = await fetch('http://localhost:4000/api/book-appointment', {
-        method: 'POST',
+      const response = await fetch('/api/book-appointment', {
+      method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend),
       });
