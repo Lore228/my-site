@@ -53,7 +53,9 @@ function Portfolio() {
   justifyContent="center"
   sx={{
     maxWidth: 1200,
+    width: '100%',
     mx: 'auto', // centrează grid-ul pe pagină
+    px: 2,
   }}
 >
   {allPhotos.map((src, index) => (
@@ -80,7 +82,7 @@ function Portfolio() {
       component="img"
       image={`/${src}`}
       alt={`Machiaj ${index + 1}`}
-      sx={{ height: 450, objectFit: 'cover' }}
+      sx={{ width:'100%', height: 450, objectFit: 'cover' }}
     />
   </Card>
 </motion.div>
