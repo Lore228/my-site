@@ -28,7 +28,7 @@ import {
       { label: 'Portofoliu', path: '/portofoliu' },
       { label: 'Despre', path: '/despre' },
       { label: 'Contact', path: '/contact' },
-      { label: 'Calendar', path: '/calendar' },
+      //{ label: 'Calendar', path: '/calendar' },
     ];
   
     const drawer = (
@@ -107,7 +107,7 @@ import {
           onClose={() => setDrawerOpen(false)}
           PaperProps={{
             sx: {
-              backgroundColor: 'transparent',
+              backgroundColor: '#6A0DAD',
               boxShadow: 'none',
             },
           }}
