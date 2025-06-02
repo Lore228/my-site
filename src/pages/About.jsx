@@ -22,93 +22,103 @@ const sections = [
 
 export default function About() {
   return (
-    <Box sx={{ px: 3, py: 6, maxWidth: '1300px', mx: 'auto' }}>
-      <Typography variant="h3" sx={{ fontWeight: 'bold', textAlign: 'center', mb: 1 }}>
+    <Box sx={{ px: 2, py: 10, maxWidth: '1400px', mx: 'auto' }}>
+      <Typography
+        variant="h3"
+        sx={{
+          fontWeight: 600,
+          textAlign: 'center',
+          mb: 1,
+          fontFamily: `'Playfair Display', serif`,
+          letterSpacing: '1px'
+        }}
+      >
         Despre mine
       </Typography>
 
-      <Divider sx={{ width: 60, height: 3, mx: 'auto', backgroundColor: 'gold', mb: 6 }} />
+      <Divider
+        sx={{
+          width: 80,
+          height: 3,
+          mx: 'auto',
+          backgroundColor: 'goldenrod',
+          mb: 10
+        }}
+      />
 
       {sections.map((section, idx) => (
-        <Grid
+        <Box
           key={idx}
-          container
-          spacing={4}
-          alignItems="center"
+          component={motion.div}
+          initial={{ opacity: 0, y: 50 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
           sx={{
+            display: 'flex',
             flexDirection: {
               xs: 'column',
               md: idx % 2 === 0 ? 'row' : 'row-reverse'
             },
-            mb: 8
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: { xs: 6, md: 10 },
+            mb: 12
           }}
         >
-          <Grid item xs={12} md={6}>
-            <motion.img
-              src={section.img}
-              alt={section.title}
-              style={{
-                width: '100%',
-                height: '350px',
-                objectFit: 'cover',
-                boxShadow: '0 0 0 transparent',
-                transition: 'all 0.4s ease-in-out',
-              }}
-              whileHover={{
-                scale: 1.03,
-                boxShadow: '0 0 20px 4px rgba(168, 85, 247, 0.6)' // mov elegant
-              }}
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-            />
-          </Grid>
+          {/* Imaginea */}
+          <Box
+            component="img"
+            src={section.img}
+            alt={section.title}
+            sx={{
+              width: '100%',
+              maxWidth: '500px',
+              boxShadow: 3,
+              flex: 1,
+              mx: 'auto'
+            }}
+          />
 
-          <Grid item xs={12} md={6}>
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
+          {/* Textul */}
+          <Box sx={{ flex: 1, maxWidth: '500px' }}>
+            <Typography
+              variant="h5"
+              sx={{
+                fontWeight: 600,
+                mb: 2,
+                fontFamily: `'Playfair Display', serif`,
+                color: 'text.primary'
+              }}
             >
-              <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 2 }}>
-                {section.title}
-              </Typography>
-              <Typography
-                variant="body1"
-                sx={{
-                  color: 'text.secondary',
-                  lineHeight: 1.8,
-                  maxWidth: '500px',
-                  mx: { md: 0, xs: 'auto' },
-                  mb: 3
-                }}
-              >
-                {section.text}
-              </Typography>
+              {section.title}
+            </Typography>
 
-              {/* Linie mov fixă, cu animare spre dreapta */}
-              <motion.div
-                initial={{ scaleX: 1 }}
-                whileHover={{ scaleX: 1.5 }}
-                transition={{ duration: 0.4 }}
-                style={{
-                  height: '5px',
-                  width: '150px',
-                  transformOrigin: 'left',
-                  backgroundColor: '#a855f7',
-                  borderRadius: '2px',
-                  marginLeft: 0,
-                  marginRight: 'auto'
-                }}
-              />
-            </motion.div>
-          </Grid>
-        </Grid>
+            <Typography
+              variant="body1"
+              sx={{
+                color: 'text.secondary',
+                lineHeight: 1.9,
+                fontSize: '1.15rem'
+              }}
+            >
+              {section.text}
+            </Typography>
+
+            <Box
+              sx={{
+                height: '3px',
+                width: '80px',
+                mt: 3,
+                backgroundColor: '#a855f7'
+              }}
+            />
+          </Box>
+        </Box>
       ))}
 
-      <Box sx={{ textAlign: 'center', mt: 6 }}>
+      {/* Buton și semnătură */}
+      <Box sx={{ textAlign: 'center', mt: 10 }}>
         <Button
           variant="outlined"
           component={Link}
@@ -134,8 +144,9 @@ export default function About() {
           variant="h5"
           sx={{
             fontFamily: `'Great Vibes', cursive`,
-            mt: 4,
-            color: '#a855f7'
+            mt: 5,
+            color: '#a855f7',
+            fontSize: '2rem'
           }}
         >
           Lorena
