@@ -6,14 +6,18 @@ import { fileURLToPath } from 'url';
 import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
+import dotenv from 'dotenv';
+dotenv.config();
+
 
 // === Configurare Nodemailer ===
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'lorenaaa155@gmail.com',
-    pass: 'yawjmcxvkepinlrb'
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
+  
 });
 
 async function sendConfirmationEmail(toEmail, appointment) {
@@ -63,7 +67,8 @@ async function sendReminderEmail(toEmail, appointment) {
 
 // === Express App Config ===
 const app = express();
-const PORT = 4000;
+const PORT = process.env.PORT || 4000;
+
 
 app.use(cors());
 app.use(express.json());
