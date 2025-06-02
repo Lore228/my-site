@@ -54,6 +54,8 @@ export default function BookingDialog() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [bookedHours, setBookedHours] = useState([]);
+  const API_BASE = import.meta.env.VITE_API_URL;
+
 
   useEffect(() => {
     if (selectedService) {
@@ -64,8 +66,8 @@ export default function BookingDialog() {
   useEffect(() => {
     if (bookingData.date) {
       const dateStr = bookingData.date.format('YYYY-MM-DD');
-      fetch(`/api/appointments?date=${dateStr}`)
-        .then((res) => res.json())
+      fetch(`${API_BASE}/api/appointments?date=${dateStr}`)
+      .then((res) => res.json())
         .then((data) => setBookedHours(data))
         .catch(() => setBookedHours([]));
     } else {
@@ -140,7 +142,7 @@ export default function BookingDialog() {
 
     setLoading(true);
     try {
-      const response = await fetch('/api/book-appointment', {
+      const response = await fetch(`${API_BASE}/api/book-appointment`, {
       method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(dataToSend),
