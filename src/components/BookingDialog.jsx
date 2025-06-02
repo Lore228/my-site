@@ -66,7 +66,7 @@ export default function BookingDialog() {
   useEffect(() => {
     if (bookingData.date) {
       const dateStr = bookingData.date.format('YYYY-MM-DD');
-      fetch(`${api}/api/appointments?date=${dateStr}`)
+      fetch(`${API_BASE}/api/appointments?date=${dateStr}`)
       .then((res) => res.json())
         .then((data) => setBookedHours(data))
         .catch(() => setBookedHours([]));
