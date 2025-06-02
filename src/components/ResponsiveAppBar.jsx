@@ -9,17 +9,15 @@ import {
     ListItem,
     ListItemText,
     Box,
-    Switch,
-    useMediaQuery,
+    useMediaQuery
   } from '@mui/material';
-  import { Link } from 'react-router-dom';
   import MenuIcon from '@mui/icons-material/Menu';
+  import CloseIcon from '@mui/icons-material/Close';
+  import { Link } from 'react-router-dom';
   import { useState } from 'react';
   import { useTheme } from '@mui/material/styles';
-  import CloseIcon from '@mui/icons-material/Close';
-
   
-  function ResponsiveAppBar({ toggleMode, mode }) {
+  export default function ResponsiveAppBar({ toggleMode, mode }) {
     const [drawerOpen, setDrawerOpen] = useState(false);
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('md'));
@@ -34,22 +32,35 @@ import {
     ];
   
     const drawer = (
-        <Box sx={{ width: 250 }} role="presentation">
-          <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-            <IconButton onClick={() => setDrawerOpen(false)}>
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <List>
-            {navItems.map((item) => (
-              <ListItem button component={Link} to={item.path} key={item.label} onClick={() => setDrawerOpen(false)}>
-                <ListItemText primary={item.label} />
-              </ListItem>
-            ))}
-          </List>
+      <Box
+        sx={{
+          width: 250,
+          height: '100%',
+          backgroundColor: 'rgba(255, 255, 255, 0.95)', // fundal semi-transparent
+          backdropFilter: 'blur(6px)',
+        }}
+        role="presentation"
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+          <IconButton onClick={() => setDrawerOpen(false)}>
+            <CloseIcon />
+          </IconButton>
         </Box>
-      );
-      
+        <List>
+          {navItems.map((item) => (
+            <ListItem
+              button
+              component={Link}
+              to={item.path}
+              key={item.label}
+              onClick={() => setDrawerOpen(false)}
+            >
+              <ListItemText primary={item.label} />
+            </ListItem>
+          ))}
+        </List>
+      </Box>
+    );
   
     return (
       <>
@@ -76,24 +87,39 @@ import {
                 <MenuIcon />
               </IconButton>
             ) : (
-              <>
-                {navItems.map((item) => (
-                  <Button key={item.label} color="inherit" component={Link} to={item.path}>
-                    {item.label}
-                  </Button>
-                ))}
-                <Switch checked={mode === 'dark'} onChange={toggleMode} />
-              </>
+              navItems.map((item) => (
+                <Button
+                  key={item.label}
+                  color="inherit"
+                  component={Link}
+                  to={item.path}
+                >
+                  {item.label}
+                </Button>
+              ))
             )}
           </Toolbar>
         </AppBar>
   
-        <Drawer anchor="left" open={drawerOpen} onClose={() => setDrawerOpen(false)}>
+        <Drawer
+          anchor="left"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          PaperProps={{
+            sx: {
+              backgroundColor: 'transparent',
+              boxShadow: 'none',
+            },
+          }}
+          ModalProps={{
+            BackdropProps: {
+              sx: { backgroundColor: 'rgba(0, 0, 0, 0.4)' }, // fundal întunecat în spate
+            },
+          }}
+        >
           {drawer}
         </Drawer>
       </>
     );
   }
-  
-  export default ResponsiveAppBar;
   
