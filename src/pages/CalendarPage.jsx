@@ -27,7 +27,7 @@ import {
 } from '@mui/material';
 
 const locales = { ro };
-
+const API_BASE = import.meta.env.VITE_API_URL;
 const localizer = dateFnsLocalizer({
   format,
   parse,
@@ -46,8 +46,8 @@ export default function CalendarPage() {
   const [selectedEvent, setSelectedEvent] = useState(null);
 
   useEffect(() => {
-    fetch('http://localhost:4000/api/appointments')
-      .then((res) => res.json())
+    fetch(`${API_BASE}/api/appointments`)
+    .then((res) => res.json())
       .then((data) => setAllAppointments(data));
   }, []);
 
