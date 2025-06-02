@@ -55,6 +55,8 @@ export default function BookingDialog() {
   const [success, setSuccess] = useState(null);
   const [bookedHours, setBookedHours] = useState([]);
   const API_BASE = import.meta.env.VITE_API_URL;
+  console.log("✅ API_BASE:", API_BASE);
+
 
 
   useEffect(() => {
