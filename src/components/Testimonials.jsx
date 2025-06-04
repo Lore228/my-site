@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Box, Typography, TextField, Button, useTheme, Divider } from '@mui/material';
 import { motion } from 'framer-motion';
+import { Rating } from '@mui/material';
+
 
 const defaultTestimonials = [
   {
@@ -24,34 +26,45 @@ function Testimonials() {
   const [testimonials, setTestimonials] = useState(defaultTestimonials);
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
+  const [rating, setRating] = useState(5);
+
 
   // Încarcă recenziile salvate
   useEffect(() => {
-    const saved = JSON.parse(localStorage.getItem('userTestimonials'));
-    if (saved && Array.isArray(saved)) {
-      setTestimonials([...defaultTestimonials, ...saved]);
-    }
+    fetch(`${import.meta.env.VITE_API_URL}/api/reviews`)
+      .then(res => res.json())
+      .then(data => setTestimonials([...defaultTestimonials, ...data]))
+      .catch(err => console.error('Eroare la încărcarea recenziilor:', err));
   }, []);
+  
 
   // Trimite recenzie
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    const newTestimonial = { name, message };
-
-    // Salvare în localStorage
-    const existing = JSON.parse(localStorage.getItem('userTestimonials')) || [];
-    const updated = [...existing, newTestimonial];
-    localStorage.setItem('userTestimonials', JSON.stringify(updated));
-
-    // Actualizare stare
-    setTestimonials((prev) => [...prev, newTestimonial]);
-
-    // Reset form
-    setName('');
-    setMessage('');
-
-    alert('Mulțumim pentru recenzie!');
+    const newTestimonial = { name, message, rating };
+  
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/reviews`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newTestimonial),
+      });
+  
+      const result = await res.json();
+      if (result.success) {
+        setTestimonials(prev => [...prev, newTestimonial]);
+        setName('');
+        setMessage('');
+        alert('Mulțumim pentru recenzie!');
+      } else {
+        alert('Eroare la trimiterea recenziei.');
+      }
+    } catch (err) {
+      console.error('Eroare rețea:', err);
+      alert('Eroare de rețea.');
+    }
   };
+  
 
   return (
     <Box
@@ -96,6 +109,7 @@ function Testimonials() {
               <Typography variant="body1" sx={{ fontStyle: 'italic', mb: 1 }}>
                 “{item.message}”
               </Typography>
+              <Rating name="read-only" value={item.rating || 5} readOnly size="small" />
               <Typography
                 variant="subtitle1"
                 sx={{
@@ -152,6 +166,14 @@ function Testimonials() {
               },
             }}
           />
+          <Rating
+          name="rating"
+          value={rating}
+          onChange={(event, newValue) => setRating(newValue)}
+          size="large"
+          sx={{ mb: 3 }}
+/>
+
           <Button variant="contained" type="submit" sx={{ backgroundColor: '#6A0DAD' }}>
             Trimite recenzia
           </Button>
