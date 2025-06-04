@@ -1,4 +1,3 @@
-
 import express from 'express';
 import cors from 'cors';
 import fs from 'fs';
@@ -67,28 +66,41 @@ const sendConfirmationEmail = async (toEmail, appointment) => {
     from: process.env.EMAIL_USER,
     to: toEmail,
     subject: '✨ Confirmare programare Allure',
-    html: `<h2>Programare confirmată pentru ${appointment.selectedService}</h2><p>${appointment.date} la ${appointment.time}</p>`
+    html: `
+      <div style="font-family: 'Segoe UI', sans-serif; padding: 20px; background: #fff4f8; color: #333; border-radius: 8px;">
+        <h2 style="color: #b76e79;">✨ Bună, ${appointment.name || 'dragă clientă'}!</h2>
+        <p style="font-size: 16px;">Programarea ta pentru <strong>${appointment.selectedService}</strong> a fost <strong style="color: #b76e79;">confirmată</strong>!</p>
+        <p style="margin-top: 12px; font-size: 15px;">
+          <strong>📅 Data:</strong> ${appointment.date}<br/>
+          <strong>🕒 Ora:</strong> ${appointment.time}
+        </p>
+        <p style="margin-top: 12px;">Ne vedem cu drag la studio 💄</p>
+        <p style="margin-top: 24px; font-style: italic;">Cu stil și eleganță,<br/><strong style="color: #b76e79;">Allure Studio</strong></p>
+      </div>
+    `
   };
   return transporter.sendMail(mailOptions);
 };
 async function sendInternalNotification(appointment) {
   const mailOptions = {
     from: process.env.EMAIL_USER,
-    to: 'ta@email.com', // <- înlocuiește cu adresa ta reală
+    to: 'lorenaaa155@gmail.com', 
     subject: `📥 Nouă programare de la ${appointment.name}`,
     html: `
-      <h3>Detalii programare:</h3>
-      <ul>
-        <li><strong>Nume:</strong> ${appointment.name}</li>
-        <li><strong>Email:</strong> ${appointment.email}</li>
-        <li><strong>Telefon:</strong> ${appointment.phone}</li>
-        <li><strong>Serviciu:</strong> ${appointment.selectedService}</li>
-        <li><strong>Data:</strong> ${appointment.date}</li>
-        <li><strong>Ora:</strong> ${appointment.time}</li>
-      </ul>
+      <div style="font-family: 'Segoe UI', sans-serif; padding: 20px; background: #fff; border: 1px solid #eee; border-radius: 6px;">
+        <h3 style="color: #b76e79;">📋 Programare înregistrată</h3>
+        <ul style="font-size: 15px; line-height: 1.6;">
+          <li><strong>Nume:</strong> ${appointment.name}</li>
+          <li><strong>Email:</strong> ${appointment.email}</li>
+          <li><strong>Telefon:</strong> ${appointment.phone}</li>
+          <li><strong>Serviciu:</strong> ${appointment.selectedService}</li>
+          <li><strong>Data:</strong> ${appointment.date}</li>
+          <li><strong>Ora:</strong> ${appointment.time}</li>
+        </ul>
+        <p style="margin-top: 16px; font-size: 14px; color: #888;">Allure Studio · Notificare internă</p>
+      </div>
     `
   };
-
   return await transporter.sendMail(mailOptions);
 }
 
@@ -97,8 +109,20 @@ const sendReminderEmail = async (toEmail, appointment) => {
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: toEmail,
-    subject: '⏰ Reminder programare Allure',
-    html: `<h2>Reminder: ${appointment.selectedService}</h2><p>${appointment.date} la ${appointment.time}</p>`
+    subject: '⏰ Reminder pentru programarea ta Allure',
+    html: `
+      <div style="font-family: 'Segoe UI', sans-serif; padding: 20px; background: #f3f3f3; color: #333; border-radius: 8px;">
+        <h2 style="color: #6a0dad;">⏰ Salut, ${appointment.name || 'dragă clientă'}!</h2>
+        <p>Îți reamintim cu drag de programarea ta la Allure:</p>
+        <p style="font-size: 15px;">
+          <strong>📅 Data:</strong> ${appointment.date}<br/>
+          <strong>🕒 Ora:</strong> ${appointment.time}<br/>
+          <strong>💄 Serviciu:</strong> ${appointment.selectedService}
+        </p>
+        <p style="margin-top: 16px;">Te așteptăm cu zâmbetul pe buze! 💜</p>
+        <p style="margin-top: 20px;">Cu eleganță,<br/><strong style="color: #6a0dad;">Allure Studio</strong></p>
+      </div>
+    `
   };
   return transporter.sendMail(mailOptions);
 };
