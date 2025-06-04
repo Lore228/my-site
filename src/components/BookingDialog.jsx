@@ -17,6 +17,7 @@ import { useState, useContext, useEffect } from 'react';
 import { BookingDialogContext } from '../context/BookingDialogContext';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ro';
+import api from '../api'; // 🔥 NOU: conexiune Axios
 
 export default function BookingDialog() {
   const { open, selectedService, closeDialog } = useContext(BookingDialogContext);
@@ -54,10 +55,6 @@ export default function BookingDialog() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(null);
   const [bookedHours, setBookedHours] = useState([]);
-  const API_BASE = import.meta.env.VITE_API_URL;
-  console.log("✅ API_BASE:", API_BASE);
-
-
 
   useEffect(() => {
     if (selectedService) {
@@ -68,9 +65,8 @@ export default function BookingDialog() {
   useEffect(() => {
     if (bookingData.date) {
       const dateStr = bookingData.date.format('YYYY-MM-DD');
-      fetch(`${API_BASE}/api/appointments?date=${dateStr}`)
-      .then((res) => res.json())
-        .then((data) => setBookedHours(data))
+      api.get(`/appointments?date=${dateStr}`)
+        .then((res) => setBookedHours(res.data))
         .catch(() => setBookedHours([]));
     } else {
       setBookedHours([]);
@@ -96,11 +92,7 @@ export default function BookingDialog() {
   };
 
   const handleChange = (field, value) => {
-    console.log(`🛠️ Changed ${field}:`, value);
-    if (field === 'time' && value && !dayjs.isDayjs(value)) {
-      value = dayjs(value);
-    }
-    if (field === 'date' && value && !dayjs.isDayjs(value)) {
+    if ((field === 'time' || field === 'date') && value && !dayjs.isDayjs(value)) {
       value = dayjs(value);
     }
     setBookingData((prev) => ({ ...prev, [field]: value }));
@@ -132,7 +124,6 @@ export default function BookingDialog() {
       selectedService: bookingData.selectedService,
       date: parsedDate.format('YYYY-MM-DD'),
       time: parsedTime.format('HH:mm'),
-      duration,
     };
 
     const newErrors = {};
@@ -144,12 +135,8 @@ export default function BookingDialog() {
 
     setLoading(true);
     try {
-      const response = await fetch(`${API_BASE}/api/book-appointment`, {
-      method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(dataToSend),
-      });
-      const result = await response.json();
+      const response = await api.post('/book-appointment', dataToSend);
+      const result = response.data;
       if (result.success) {
         setSuccess(`Mulțumim, ${bookingData.name}! Programarea a fost trimisă cu succes.`);
         setBookingData({ name: '', email: '', phone: '', date: null, time: null, selectedService: '' });
@@ -181,11 +168,9 @@ export default function BookingDialog() {
             onBlur={() => handleBlur('selectedService')}
           >
             <MenuItem value="">Selectează...</MenuItem>
-            <MenuItem value="Machiaj de zi">Machiaj de zi</MenuItem>
-            <MenuItem value="Machiaj pentru ședință foto">Machiaj pentru ședință foto</MenuItem>
-            <MenuItem value="Machiaj de ocazie">Machiaj de ocazie</MenuItem>
-            <MenuItem value="Machiaj mireasă">Machiaj mireasă</MenuItem>
-            <MenuItem value="Programare generală">Programare generală</MenuItem>
+            {Object.keys(serviceDurations).map((service) => (
+              <MenuItem key={service} value={service}>{service}</MenuItem>
+            ))}
           </Select>
           {errors.selectedService && <FormHelperText>{errors.selectedService}</FormHelperText>}
         </FormControl>

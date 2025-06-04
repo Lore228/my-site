@@ -1,25 +1,23 @@
 import express from 'express';
 import cors from 'cors';
-import fs from 'fs';
-import path from 'path';
 import { fileURLToPath } from 'url';
 import dayjs from 'dayjs';
 import nodemailer from 'nodemailer';
 import cron from 'node-cron';
 import dotenv from 'dotenv';
+import mongoose from 'mongoose';
+import Appointment from './models/Appointment.js';
+import Review from './models/Review.js';
+
 dotenv.config();
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log('✅ Conectat la MongoDB Atlas'))
+  .catch(err => console.error('❌ Eroare MongoDB:', err));
 
 const app = express();
 const PORT = process.env.PORT || 4000;
-
 app.use(cors());
 app.use(express.json());
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-const appointmentsFile = path.join(__dirname, 'appointments.json');
-const reviewsFile = path.join(__dirname, 'reviews.json');
 
 const services = {
   'Machiaj de zi': 60,
@@ -37,20 +35,6 @@ const workSchedule = {
   4: { start: '17:00', end: '22:00' },
   5: { start: '17:00', end: '22:00' },
   6: { start: '06:00', end: '22:00' }
-};
-
-const readJSON = (file) => {
-  try {
-    const data = fs.readFileSync(file, 'utf8');
-    const parsed = JSON.parse(data);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-};
-
-const writeJSON = (file, data) => {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
 };
 
 const transporter = nodemailer.createTransport({
@@ -126,10 +110,11 @@ const sendReminderEmail = async (toEmail, appointment) => {
   };
   return transporter.sendMail(mailOptions);
 };
-
 app.post('/api/book-appointment', async (req, res) => {
   const raw = req.body;
-  if (!raw.date || !raw.time || !raw.selectedService) return res.status(400).json({ success: false, message: 'Date lipsă' });
+  if (!raw.date || !raw.time || !raw.selectedService) {
+    return res.status(400).json({ success: false, message: 'Date lipsă' });
+  }
 
   const date = dayjs(raw.date).format('YYYY-MM-DD');
   const time = raw.time;
@@ -139,20 +124,24 @@ app.post('/api/book-appointment', async (req, res) => {
   const start = dayjs(`${date} ${time}`);
   const end = start.add(totalDuration, 'minute');
 
-  const all = readJSON(appointmentsFile);
-  const overlap = all
-    .filter((a) => a.date === date)
-    .some((a) => {
-      const aStart = dayjs(`${a.date} ${a.time}`);
-      const aEnd = aStart.add(a.duration || 60, 'minute');
-      return start.isBefore(aEnd) && end.isAfter(aStart);
-    });
+  const all = await Appointment.find({ date });
+  const overlap = all.some((a) => {
+    const aStart = dayjs(`${a.date} ${a.time}`);
+    const aEnd = aStart.add(a.duration || 60, 'minute');
+    return start.isBefore(aEnd) && end.isAfter(aStart);
+  });
 
   if (overlap) return res.status(409).json({ success: false, message: 'Interval ocupat' });
 
-  const appointment = { ...raw, date, time, duration: totalDuration, reminderSent: false };
-  all.push(appointment);
-  writeJSON(appointmentsFile, all);
+  const appointment = new Appointment({
+    ...raw,
+    date,
+    time,
+    duration: totalDuration,
+    reminderSent: false
+  });
+
+  await appointment.save();
 
   try {
     await sendConfirmationEmail(appointment.email, appointment);
@@ -163,18 +152,19 @@ app.post('/api/book-appointment', async (req, res) => {
   }
 });
 
-app.get('/api/appointments', (req, res) => {
+app.get('/api/appointments', async (req, res) => {
   const { date } = req.query;
-  const all = readJSON(appointmentsFile);
-  if (date) return res.json(all.filter((a) => a.date === date));
+  const filter = date ? { date } : {};
+  const all = await Appointment.find(filter);
   res.json(all);
 });
 
-app.get('/api/available-slots', (req, res) => {
+
+app.get('/api/available-slots', async (req, res) => {
   const { date, service } = req.query;
   const duration = services[service] || 60;
   const buffer = 20;
-  const appointments = readJSON(appointmentsFile).filter((a) => a.date === date);
+  const appointments = await Appointment.find({ date });
   const schedule = workSchedule[dayjs(date).day()];
 
   if (!schedule) return res.json([]);
@@ -198,50 +188,53 @@ app.get('/api/available-slots', (req, res) => {
   res.json(slots);
 });
 
-app.get('/api/reviews', (req, res) => {
-  const allReviews = readJSON(reviewsFile);
-  res.json(allReviews);
+app.get('/api/reviews', async (req, res) => {
+  const reviews = await Review.find().sort({ createdAt: -1 });
+  res.json(reviews);
 });
 
-app.post('/api/reviews', (req, res) => {
+
+app.post('/api/reviews', async (req, res) => {
   const { name, message, rating } = req.body;
-  if (!name || !message || typeof rating !== 'number') return res.status(400).json({ success: false });
+  if (!name || !message || typeof rating !== 'number') {
+    return res.status(400).json({ success: false });
+  }
 
-  const newReview = { name, message, rating, createdAt: new Date().toISOString() };
-  const allReviews = readJSON(reviewsFile);
-  allReviews.push(newReview);
-  writeJSON(reviewsFile, allReviews);
-
+  const review = new Review({ name, message, rating });
+  await review.save();
   res.json({ success: true });
 });
 
-cron.schedule('*/30 * * * *', () => {
-  const allAppointments = readJSON(appointmentsFile);
+cron.schedule('*/30 * * * *', async () => {
+  const allAppointments = await Appointment.find();
   const now = dayjs();
   const in3Hours = now.add(3, 'hour');
 
-  allAppointments
-    .filter(a => {
-      const apptTime = dayjs(`${a.date} ${a.time}`);
-      return apptTime.isAfter(now) && apptTime.isBefore(in3Hours) && !a.reminderSent;
-    })
-    .forEach(async (a) => {
+  for (const a of allAppointments) {
+    const apptTime = dayjs(`${a.date} ${a.time}`);
+    if (
+      apptTime.isAfter(now) &&
+      apptTime.isBefore(in3Hours) &&
+      !a.reminderSent
+    ) {
       try {
         await sendReminderEmail(a.email, a);
-        const updated = readJSON(appointmentsFile);
-        const idx = updated.findIndex(x => x.email === a.email && x.date === a.date && x.time === a.time);
-        if (idx !== -1) {
-          updated[idx].reminderSent = true;
-          writeJSON(appointmentsFile, updated);
-        }
+        a.reminderSent = true;
+        await a.save();
       } catch (e) {
         console.error('Reminder eșuat:', e);
       }
-    });
+    }
+  }
 
   // curăță programările expirate
-  const filtered = allAppointments.filter(a => dayjs(`${a.date} ${a.time}`).isAfter(now.subtract(1, 'day')));
-  writeJSON(appointmentsFile, filtered);
+  const oneDayAgo = now.subtract(1, 'day');
+  await Appointment.deleteMany({
+    $expr: {
+      $lt: [{ $toDate: { $concat: ['$date', 'T', '$time'] } }, oneDayAgo.toDate()]
+    }
+  });
 });
+
 
 app.listen(PORT, () => console.log(`✅ Serverul rulează pe http://localhost:${PORT}`));
