@@ -172,8 +172,7 @@ function Testimonials() {
           onChange={(event, newValue) => setRating(newValue)}
           size="large"
           sx={{ mb: 3 }}
-/>
-
+          />
           <Button variant="contained" type="submit" sx={{ backgroundColor: '#6A0DAD' }}>
             Trimite recenzia
           </Button>

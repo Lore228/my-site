@@ -71,6 +71,27 @@ const sendConfirmationEmail = async (toEmail, appointment) => {
   };
   return transporter.sendMail(mailOptions);
 };
+async function sendInternalNotification(appointment) {
+  const mailOptions = {
+    from: process.env.EMAIL_USER,
+    to: 'ta@email.com', // <- înlocuiește cu adresa ta reală
+    subject: `📥 Nouă programare de la ${appointment.name}`,
+    html: `
+      <h3>Detalii programare:</h3>
+      <ul>
+        <li><strong>Nume:</strong> ${appointment.name}</li>
+        <li><strong>Email:</strong> ${appointment.email}</li>
+        <li><strong>Telefon:</strong> ${appointment.phone}</li>
+        <li><strong>Serviciu:</strong> ${appointment.selectedService}</li>
+        <li><strong>Data:</strong> ${appointment.date}</li>
+        <li><strong>Ora:</strong> ${appointment.time}</li>
+      </ul>
+    `
+  };
+
+  return await transporter.sendMail(mailOptions);
+}
+
 
 const sendReminderEmail = async (toEmail, appointment) => {
   const mailOptions = {
@@ -111,6 +132,7 @@ app.post('/api/book-appointment', async (req, res) => {
 
   try {
     await sendConfirmationEmail(appointment.email, appointment);
+    await sendInternalNotification(appointment);
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Email eșuat', error: err.message });
